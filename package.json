@@ -43,9 +43,12 @@
     "@types/mocha": "*",
     "@types/node": "^6.0.31",
     "@types/rimraf": "0.0.28",
+    "@types/supertest": "^2.0.5",
     "@types/winston": "~2.2.0",
     "chai": "*",
     "mocha": "*",
+    "ps-node": "^0.1.6",
+    "supertest": "^3.1.0",
     "ts-node": "~1.0.0",
     "tslint": "^5.9.1",
     "typescript": "~2.3.0"
