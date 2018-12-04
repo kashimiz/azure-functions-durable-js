@@ -1,3 +1,4 @@
+import url = require("url");
 import { isURL } from "validator";
 import { Constants, DurableOrchestrationStatus, HttpManagementPayload, IFunctionContext, IHttpRequest,
     IHttpResponse, IRequest, OrchestrationClientInputData, OrchestrationRuntimeStatus, Utils, WebhookClient,
@@ -124,7 +125,7 @@ export class DurableOrchestrationClient {
             webhookUrl += `&${this.showHistoryOutputQueryKey}=${showHistoryOutput}`;
         }
 
-        const res = await this.webhookClient.get(new URL(webhookUrl));
+        const res = await this.webhookClient.get(new url.URL(webhookUrl));
         switch (res.status) {
             case 200: // instance completed
             case 202: // instance in progress
@@ -143,10 +144,10 @@ export class DurableOrchestrationClient {
     public async getStatusAll(): Promise<DurableOrchestrationStatus[]> {
         // omit instanceId to get status for all instances
         const idPlaceholder = this.clientData.managementUrls.id;
-        const url = this.clientData.managementUrls.statusQueryGetUri
+        const webhookUrl = this.clientData.managementUrls.statusQueryGetUri
             .replace(idPlaceholder, "");
 
-        const res = await this.webhookClient.get(new URL(url));
+        const res = await this.webhookClient.get(new url.URL(webhookUrl));
         return res.body as DurableOrchestrationStatus[];
     }
 
@@ -166,15 +167,15 @@ export class DurableOrchestrationClient {
         runtimeStatus: OrchestrationRuntimeStatus[],
         ): Promise<DurableOrchestrationStatus[]> {
         const idPlaceholder = this.clientData.managementUrls.id;
-        let url = this.clientData.managementUrls.statusQueryGetUri
+        let webhookUrl = this.clientData.managementUrls.statusQueryGetUri
             .replace(idPlaceholder, "");
 
         if (createdTimeFrom) {
-            url += `&${this.createdTimeFromQueryKey}=${createdTimeFrom.toISOString()}`;
+            webhookUrl += `&${this.createdTimeFromQueryKey}=${createdTimeFrom.toISOString()}`;
         }
 
         if (createdTimeTo) {
-            url += `&${this.createdTimeToQueryKey}=${createdTimeTo.toISOString()}`;
+            webhookUrl += `&${this.createdTimeToQueryKey}=${createdTimeTo.toISOString()}`;
         }
 
         if (runtimeStatus && runtimeStatus.length > 0) {
@@ -184,10 +185,10 @@ export class DurableOrchestrationClient {
                     return acc + (i > 0 ? "," : "") + curr;
             });
 
-            url += `&${this.runtimeStatusQuerykey}=${statusesString}`;
+            webhookUrl += `&${this.runtimeStatusQuerykey}=${statusesString}`;
         }
 
-        const res = await this.webhookClient.get(new URL(url));
+        const res = await this.webhookClient.get(new url.URL(webhookUrl));
         if (res.status > 202) {
             throw new Error(`Webhook returned status code ${res.status}: ${res.body}`);
         }   // TODO: Make this better.. message and conditional
@@ -226,19 +227,19 @@ export class DurableOrchestrationClient {
         }
 
         const idPlaceholder = this.clientData.managementUrls.id;
-        let url = this.clientData.managementUrls.sendEventPostUri
+        let webhookUrl = this.clientData.managementUrls.sendEventPostUri
             .replace(idPlaceholder, instanceId)
             .replace(this.eventNamePlaceholder, eventName);
 
         if (taskHubName) {
-            url = url.replace(this.clientData.taskHubName, taskHubName);
+            webhookUrl = webhookUrl.replace(this.clientData.taskHubName, taskHubName);
         }
 
         if (connectionName) {
-            url = url.replace(/(connection=)([\w]+)/gi, "$1" + connectionName);
+            webhookUrl = webhookUrl.replace(/(connection=)([\w]+)/gi, "$1" + connectionName);
         }
 
-        const res = await this.webhookClient.post(new URL(url), eventData);
+        const res = await this.webhookClient.post(new url.URL(webhookUrl), eventData);
         switch (res.status) {
             case 202: // event acccepted
             case 410: // instance completed or failed
@@ -262,11 +263,11 @@ export class DurableOrchestrationClient {
      */
     public async rewind(instanceId: string, reason: string): Promise<void> {
         const idPlaceholder = this.clientData.managementUrls.id;
-        const url = this.clientData.managementUrls.rewindPostUri
+        const webhookUrl = this.clientData.managementUrls.rewindPostUri
             .replace(idPlaceholder, instanceId)
             .replace(this.reasonPlaceholder, reason);
 
-        const res = await this.webhookClient.post(new URL(url));
+        const res = await this.webhookClient.post(new url.URL(webhookUrl));
         switch (res.status) {
             case 202:
                 return;
@@ -298,12 +299,12 @@ export class DurableOrchestrationClient {
             throw new Error("orchestratorFunctionName must be a valid string.");
         }
 
-        let url = this.clientData.creationUrls.createNewInstancePostUri;
-        url = url
+        let webhookUrl = this.clientData.creationUrls.createNewInstancePostUri;
+        webhookUrl = webhookUrl
             .replace(this.functionNamePlaceholder, orchestratorFunctionName)
             .replace(this.instanceIdPlaceholder, (instanceId ? `/${instanceId}` : ""));
 
-        const res = await this.webhookClient.post(new URL(url), input);
+        const res = await this.webhookClient.post(new url.URL(webhookUrl), input);
         if (res.status > 202) {
             throw new Error(res.body as string);
         } else if (res.body) {
@@ -323,11 +324,11 @@ export class DurableOrchestrationClient {
      */
     public async terminate(instanceId: string, reason: string): Promise<void> {
         const idPlaceholder = this.clientData.managementUrls.id;
-        const url = this.clientData.managementUrls.terminatePostUri
+        const webhookUrl = this.clientData.managementUrls.terminatePostUri
             .replace(idPlaceholder, instanceId)
             .replace(this.reasonPlaceholder, reason);
 
-        const res = await this.webhookClient.post(new URL(url));
+        const res = await this.webhookClient.post(new url.URL(webhookUrl));
         switch (res.status) {
             case 202: // terminate accepted
             case 410: // instance completed or failed
@@ -424,8 +425,8 @@ export class DurableOrchestrationClient {
 
         (Object.keys(payload) as Array<(keyof HttpManagementPayload)>).forEach((key) => {
             if (this.hasValidRequestUrl(request) && isURL(payload[key], this.urlValidationOptions)) {
-                const requestUrl = new URL((request as IRequest).url || (request as IHttpRequest).http.url);
-                const dataUrl = new URL(payload[key]);
+                const requestUrl = new url.URL((request as IRequest).url || (request as IHttpRequest).http.url);
+                const dataUrl = new url.URL(payload[key]);
                 payload[key] = payload[key].replace(dataUrl.origin, requestUrl.origin);
             }
 
