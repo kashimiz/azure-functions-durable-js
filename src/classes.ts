@@ -57,3 +57,6 @@ export { OrchestrationRuntimeStatus } from "./orchestrationruntimestatus";
 export { PurgeHistoryResult } from "./purgehistoryresult";
 
 export { GuidManager } from "./guidmanager";
+
+export { ActorId } from "./entities/actorid";
+export { RequestMessage } from "./entities/requestmessage";
