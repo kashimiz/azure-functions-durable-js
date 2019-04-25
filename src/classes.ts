@@ -48,6 +48,7 @@ export { DurableOrchestrationClient } from "./durableorchestrationclient";
 export { OrchestrationClientInputData } from "./orchestrationclientinputdata";
 export { HttpCreationPayload } from "./httpcreationpayload";
 export { HttpManagementPayload } from "./httpmanagementpayload";
+export { GetStatusOptions } from "./getstatusoptions";
 
 export { IHttpRequest } from "./ihttprequest";
 export { IHttpResponse } from "./ihttpresponse";
@@ -58,5 +59,7 @@ export { PurgeHistoryResult } from "./purgehistoryresult";
 
 export { GuidManager } from "./guidmanager";
 
-export { ActorId } from "./entities/actorid";
+export { EntityId } from "./entities/entityid";
+export { EntityStateResponse } from "./entities/entitystateresponse";
 export { RequestMessage } from "./entities/requestmessage";
+export { SchedulerState } from "./entities/schedulerstate";
