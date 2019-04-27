@@ -7,16 +7,11 @@ import process = require("process");
 import url = require("url");
 import uuid = require("uuid/v1");
 import { isURL } from "validator";
-<<<<<<< HEAD
-import { Constants, DurableOrchestrationStatus, HttpCreationPayload, HttpManagementPayload, IFunctionContext,
-    IHttpRequest, IHttpResponse, OrchestrationClientInputData, OrchestrationRuntimeStatus,
-    PurgeHistoryResult, Utils,
-=======
 import { Constants, DurableOrchestrationStatus, EntityId, EntityStateResponse,
     GetStatusOptions, HttpCreationPayload, HttpManagementPayload,
     IFunctionContext, IHttpRequest, IHttpResponse, OrchestrationClientInputData,
-    OrchestrationRuntimeStatus, RequestMessage, SchedulerState, Utils,
->>>>>>> Added DurableOrchestrationClient.readEntityState method.
+    OrchestrationRuntimeStatus, PurgeHistoryResult, RequestMessage, SchedulerState,
+    Utils,
 } from "./classes";
 
 /**
@@ -190,28 +185,12 @@ export class DurableOrchestrationClient {
         showHistoryOutput?: boolean,
         showInput?: boolean,
         ): Promise<DurableOrchestrationStatus> {
-<<<<<<< HEAD
-        const template = this.clientData.managementUrls.statusQueryGetUri;
-        const idPlaceholder = this.clientData.managementUrls.id;
-
-        let webhookUrl = template.replace(idPlaceholder, instanceId);
-        if (showHistory) {
-            webhookUrl += `&${this.showHistoryQueryKey}=${showHistory}`;
-        }
-        if (showHistoryOutput) {
-            webhookUrl += `&${this.showHistoryOutputQueryKey}=${showHistoryOutput}`;
-        }
-        if (showInput === false) {
-            webhookUrl += `&${this.showInputQueryKey}=${showInput}`;
-        }
-
-=======
->>>>>>> Added DurableOrchestrationClient.readEntityState method.
         try {
             const options: GetStatusOptions = {
                 instanceId,
                 showHistory,
                 showHistoryOutput,
+                showInput,
             };
             const response = await this.getStatusInternal(options);
 
@@ -735,6 +714,9 @@ export class DurableOrchestrationClient {
             });
 
             requestUrl += `&${this.runtimeStatusQueryKey}=${statusesString}`;
+        }
+        if (typeof options.showInput === "boolean") {
+            requestUrl += `&${this.showInputQueryKey}=${options.showInput}`;
         }
 
         return this.axiosInstance.get(requestUrl);

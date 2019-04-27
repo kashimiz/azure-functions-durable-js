@@ -12,4 +12,5 @@ export class GetStatusOptions {
     createdTimeFrom?: Date;
     createdTimeTo?: Date;
     runtimeStatus?: OrchestrationRuntimeStatus[];
+    showInput?: boolean;
 }
