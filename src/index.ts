@@ -1,9 +1,10 @@
 import { EntityId, EntityStateResponse, OrchestrationRuntimeStatus,
     RetryOptions } from "./classes";
 import { getClient } from "./durableorchestrationclient";
-import { orchestrator } from "./shim";
+import { entity, orchestrator } from "./shim";
 
 export {
+    entity,
     EntityId,
     EntityStateResponse,
     getClient,

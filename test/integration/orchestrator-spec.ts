@@ -4,11 +4,12 @@ import * as moment from "moment";
 import * as uuidv1 from "uuid/v1";
 import { isUUID } from "validator";
 import {
-    CallActivityAction, CallActivityWithRetryAction, CallSubOrchestratorAction,
-    CallSubOrchestratorWithRetryAction, ContinueAsNewAction, CreateTimerAction,
-    DurableOrchestrationBindingInfo, DurableOrchestrationContext, EntityId,
-    ExternalEventType, IOrchestratorState, LockState, OrchestratorState,
-    RetryOptions, SendEntityMessageAction, WaitForExternalEventAction,
+    CallActivityAction, CallActivityWithRetryAction, CallEntityAction,
+    CallSubOrchestratorAction, CallSubOrchestratorWithRetryAction,
+    ContinueAsNewAction, CreateTimerAction, DurableOrchestrationBindingInfo,
+    DurableOrchestrationContext, EntityId, ExternalEventType,
+    IOrchestratorState, LockState, OrchestratorState, RetryOptions,
+    WaitForExternalEventAction,
 } from "../../src/classes";
 import { TestHistories } from "../testobjects/testhistories";
 import { TestOrchestrations } from "../testobjects/TestOrchestrations";
@@ -611,8 +612,75 @@ describe("Orchestrator", () => {
     });
 
     describe("callEntity()", () => {
-        it.skip("schedules an entity", async () => {
-            const orchestrator = TestOrchestrations.CallEntityGet; // TODO: finish
+        const testEntityId = new EntityId("StringStore2", "12345");
+
+        it("schedules an entity request", async () => {
+            const orchestrator = TestOrchestrations.CallEntitySet; // TODO: finish
+            const instanceId = uuidv1();
+            const expectedEntity = new EntityId("StringStore2", "12345");
+            const mockContext = new MockContext({
+                context: new DurableOrchestrationBindingInfo(
+                    TestHistories.GetOrchestratorStart(
+                        "CallEntityGet",
+                        moment.utc().toDate(),
+                    ),
+                    expectedEntity,
+                    instanceId,
+                ),
+            });
+
+            orchestrator(mockContext);
+
+            expect(mockContext.doneValue).to.be.deep.equal(
+                new OrchestratorState({
+                    isDone: false,
+                    output: undefined,
+                    actions:
+                    [
+                        [ 
+                            new CallEntityAction(
+                                EntityId.getSchedulerIdFromEntityId(expectedEntity),
+                                "set",
+                                "testString")
+                        ],
+                    ],
+                }),
+            );
+        });
+
+        it("handles a completed entity request", async () => {
+            const orchestrator = TestOrchestrations.CallEntitySet;
+            const instanceId = uuidv1();
+            const expectedEntity = new EntityId("StringStore2", "12345");
+            const mockContext = new MockContext({
+                context: new DurableOrchestrationBindingInfo(
+                    TestHistories.GetCallEntitySet(
+                        moment.utc().toDate(),
+                        expectedEntity,
+                        ),
+                    expectedEntity,
+                    instanceId,
+                    true,
+                ),
+            });
+
+            orchestrator(mockContext);
+
+            expect(mockContext.doneValue).to.be.deep.equal(
+                new OrchestratorState({
+                    isDone: true,
+                    actions:
+                    [
+                        [ 
+                            new CallEntityAction(
+                                EntityId.getSchedulerIdFromEntityId(expectedEntity),
+                                "set",
+                                "testString")
+                        ],
+                    ],
+                    output: "OK",
+                }),
+            );
         });
     });
 
@@ -1117,6 +1185,7 @@ describe("Orchestrator", () => {
         });
     });
 
+    /**
     describe.skip("lock()", () => {
         it("reports an error if already holding locks", async () => {
             const orchestrator = TestOrchestrations.GetAndReleaseLock;
@@ -1214,6 +1283,7 @@ describe("Orchestrator", () => {
             });
         });
     });
+    */
 
     describe("newGuid()", () => {
         it("generates consistent GUIDs", () => {
